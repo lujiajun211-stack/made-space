@@ -80,7 +80,7 @@
         #gesture-preview {
             position: fixed;
             right: clamp(16px, 3vw, 42px);
-            bottom: clamp(18px, 4vh, 42px);
+            top: clamp(18px, 4vh, 42px);
             z-index: 135;
             width: min(320px, calc(100vw - 32px));
             overflow: hidden;
@@ -351,7 +351,7 @@
         @media (max-width: 560px) {
             #gesture-preview {
                 right: 12px;
-                bottom: 104px;
+                top: 12px;
                 width: min(240px, calc(100vw - 24px));
             }
 
