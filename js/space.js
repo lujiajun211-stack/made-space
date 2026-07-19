@@ -1569,12 +1569,17 @@ Out of memory: Killed process 8012 (made-render) total-vm:4194304kB`,
         
         const btnMouse = document.getElementById('btn-mouse');
         const btnGesture = document.getElementById('btn-gesture');
+        const gesturePreview = document.getElementById('gesture-preview');
+        const gesturePreviewStatus = document.getElementById('gesture-preview-status');
 
         btnMouse.addEventListener('click', (e) => {
             e.stopPropagation(); 
             interactionMode = 'mouse';
             btnMouse.classList.add('active');
             btnGesture.classList.remove('active');
+            gesturePreview.classList.remove('is-visible');
+            gesturePreview.setAttribute('aria-hidden', 'true');
+            stopGestureCamera();
         });
 
         btnGesture.addEventListener('click', (e) => {
@@ -1582,6 +1587,8 @@ Out of memory: Killed process 8012 (made-render) total-vm:4194304kB`,
             interactionMode = 'gesture';
             btnGesture.classList.add('active');
             btnMouse.classList.remove('active');
+            gesturePreview.classList.add('is-visible');
+            gesturePreview.setAttribute('aria-hidden', 'false');
             startGestureCamera();
         });
 
@@ -1668,9 +1675,54 @@ Out of memory: Killed process 8012 (made-render) total-vm:4194304kB`,
         let handX = 0.5; 
         let handY = 0.5; 
 
-        const videoElement = document.createElement('video');
-        videoElement.style.display = 'none';
-        document.body.appendChild(videoElement);
+        const videoElement = document.getElementById('gesture-video');
+        const gestureSkeletonCanvas = document.getElementById('gesture-skeleton-canvas');
+        const gestureSkeletonCtx = gestureSkeletonCanvas.getContext('2d');
+        const handConnections = window.HAND_CONNECTIONS || [
+            [0, 1], [1, 2], [2, 3], [3, 4],
+            [0, 5], [5, 6], [6, 7], [7, 8],
+            [5, 9], [9, 10], [10, 11], [11, 12],
+            [9, 13], [13, 14], [14, 15], [15, 16],
+            [13, 17], [17, 18], [18, 19], [19, 20],
+            [0, 17]
+        ];
+
+        function drawHandSkeleton(landmarks) {
+            const width = gestureSkeletonCanvas.width;
+            const height = gestureSkeletonCanvas.height;
+            gestureSkeletonCtx.clearRect(0, 0, width, height);
+            if (!landmarks) return;
+
+            gestureSkeletonCtx.lineWidth = 3;
+            gestureSkeletonCtx.lineCap = 'round';
+            gestureSkeletonCtx.lineJoin = 'round';
+            gestureSkeletonCtx.strokeStyle = '#ff1f36';
+            gestureSkeletonCtx.shadowColor = 'rgba(255, 0, 36, 0.9)';
+            gestureSkeletonCtx.shadowBlur = 8;
+
+            handConnections.forEach(([startIndex, endIndex]) => {
+                const start = landmarks[startIndex];
+                const end = landmarks[endIndex];
+                gestureSkeletonCtx.beginPath();
+                gestureSkeletonCtx.moveTo(start.x * width, start.y * height);
+                gestureSkeletonCtx.lineTo(end.x * width, end.y * height);
+                gestureSkeletonCtx.stroke();
+            });
+
+            gestureSkeletonCtx.fillStyle = '#ff3348';
+            landmarks.forEach((landmark, index) => {
+                gestureSkeletonCtx.beginPath();
+                gestureSkeletonCtx.arc(
+                    landmark.x * width,
+                    landmark.y * height,
+                    index === 0 ? 5 : 3.5,
+                    0,
+                    Math.PI * 2
+                );
+                gestureSkeletonCtx.fill();
+            });
+            gestureSkeletonCtx.shadowBlur = 0;
+        }
 
         const hands = new Hands({locateFile: (file) => {
             return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
@@ -1686,6 +1738,8 @@ Out of memory: Killed process 8012 (made-render) total-vm:4194304kB`,
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 isHandVisible = true;
                 const landmarks = results.multiHandLandmarks[0];
+                drawHandSkeleton(landmarks);
+                gesturePreviewStatus.classList.add('is-hidden');
 
                 handX = landmarks[9].x;
                 handY = landmarks[9].y;
@@ -1702,6 +1756,9 @@ Out of memory: Killed process 8012 (made-render) total-vm:4194304kB`,
                 isFist = (extendedCount <= 1);
             } else {
                 isHandVisible = false;
+                drawHandSkeleton(null);
+                gesturePreviewStatus.textContent = '请将手放入画面';
+                gesturePreviewStatus.classList.remove('is-hidden');
             }
         });
 
@@ -1716,10 +1773,24 @@ Out of memory: Killed process 8012 (made-render) total-vm:4194304kB`,
         function startGestureCamera() {
             if (gestureCameraStarted) return;
             gestureCameraStarted = true;
+            gesturePreviewStatus.textContent = '正在启动摄像头...';
+            gesturePreviewStatus.classList.remove('is-hidden');
             camera.start().catch(err => {
                 gestureCameraStarted = false;
+                gesturePreviewStatus.textContent = '无法访问摄像头';
+                gesturePreviewStatus.classList.remove('is-hidden');
                 console.warn("鎽勫儚澶村惎鍔ㄥけ璐?", err);
             });
+        }
+
+        function stopGestureCamera() {
+            if (!gestureCameraStarted) return;
+            camera.stop();
+            gestureCameraStarted = false;
+            isHandVisible = false;
+            drawHandSkeleton(null);
+            gesturePreviewStatus.textContent = '正在启动摄像头...';
+            gesturePreviewStatus.classList.remove('is-hidden');
         }
 
         const startTime = Date.now();
