@@ -352,22 +352,169 @@
             #gesture-preview {
                 right: 12px;
                 top: 12px;
-                width: min(240px, calc(100vw - 24px));
+                width: min(210px, 48vw);
             }
 
             #countdown-hud {
-                top: 48px;
-                min-width: min(320px, calc(100vw - 32px));
+                top: 22px;
+                min-width: 0;
+                width: auto;
             }
 
             .countdown-frame {
-                padding: 14px 22px;
+                padding: 9px 15px 10px;
             }
 
-            .countdown-meta,
-            .countdown-footer {
+            #countdown-time {
+                font-size: clamp(38px, 12vw, 54px);
+            }
+
+            #countdown-warning-canvas {
+                width: clamp(128px, 36vw, 176px);
+                height: clamp(128px, 36vw, 176px);
+            }
+
+            #portal-canvas {
+                width: clamp(190px, 58vw, 290px);
+                height: clamp(190px, 58vw, 290px);
+            }
+
+            #ui-wrapper {
+                bottom: 14px;
+                gap: 7px;
+            }
+
+            #btn-toggle {
+                padding: 5px 14px;
                 font-size: 10px;
-                gap: 10px;
+            }
+
+            #control-panel {
+                padding: 4px;
+                max-height: 42px;
+            }
+
+            .mode-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+            }
+
+            #error-stack {
+                left: 8px;
+                right: 8px;
+                bottom: 72px;
+                max-height: 27vh;
+                padding: 0 8px;
+                font-size: clamp(8px, 2.15vw, 10px);
+                line-height: 1.32;
+            }
+
+            .log-panel {
+                width: var(--log-panel-width, min(46vw, 220px));
+                max-width: min(46vw, 220px);
+                font-size: clamp(7px, 2vw, 9px);
+                line-height: 1.22;
+            }
+
+            .log-panel.is-wide {
+                max-width: min(52vw, 250px);
+            }
+
+            #ending-screen {
+                padding: 0 14px 72px;
+            }
+
+            #ending-modal {
+                width: calc(100vw - 28px);
+                min-height: 88px;
+                padding: 18px 20px;
+            }
+
+            #ending-modal-line {
+                font-size: clamp(15px, 4.2vw, 20px);
+                line-height: 1.55;
+            }
+
+            #start-modal {
+                width: calc(100vw - 28px);
+                padding: 22px 18px 20px;
+            }
+
+            #start-modal-title {
+                margin-bottom: 18px;
+                font-size: clamp(15px, 4.4vw, 19px);
+                letter-spacing: 1.4px;
+                line-height: 1.6;
+            }
+        }
+
+        @media (max-width: 900px) and (orientation: landscape),
+               (max-height: 520px) {
+            #gesture-preview {
+                top: 10px;
+                right: 10px;
+                width: min(190px, 30vw);
+            }
+
+            .gesture-preview-header {
+                height: 26px;
+                padding: 0 9px;
+                font-size: 9px;
+            }
+
+            #countdown-hud {
+                top: 10px;
+            }
+
+            .countdown-frame {
+                padding: 7px 13px 8px;
+            }
+
+            #countdown-time {
+                font-size: clamp(34px, 9vh, 48px);
+            }
+
+            #countdown-warning-canvas {
+                width: clamp(108px, 28vh, 150px);
+                height: clamp(108px, 28vh, 150px);
+            }
+
+            #portal-canvas {
+                width: clamp(170px, 48vh, 250px);
+                height: clamp(170px, 48vh, 250px);
+            }
+
+            #ui-wrapper {
+                bottom: 8px;
+                gap: 4px;
+            }
+
+            #btn-toggle {
+                padding: 3px 12px;
+                font-size: 9px;
+            }
+
+            #control-panel {
+                padding: 3px;
+                max-height: 35px;
+            }
+
+            .mode-btn {
+                padding: 6px 14px;
+                font-size: 10px;
+            }
+
+            #error-stack {
+                bottom: 48px;
+                max-height: 24vh;
+                font-size: 8px;
+                line-height: 1.2;
+            }
+
+            .log-panel {
+                max-width: min(34vw, 230px);
+                font-size: 7px;
+                line-height: 1.16;
             }
         }
 
