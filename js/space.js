@@ -1335,7 +1335,7 @@ Out of memory: Killed process 8012 (made-render) total-vm:4194304kB`,
         }
 
         function ensureLogPanelStates(strength, nowMs) {
-            const count = 2;
+            const count = window.innerWidth <= 720 ? 1 : 2;
 
             while (logPanelStates.length < count) {
                 const i = logPanelStates.length;
