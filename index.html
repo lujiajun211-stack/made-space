@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>空间</title>
+    <link rel="stylesheet" href="./css/space.css">
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="start-overlay">
+        <div id="start-modal">
+            <p id="start-modal-title">您的任务已完成，确认离开made系统</p>
+            <button id="start-confirm-btn">确认</button>
+        </div>
+    </div>
+
+    <audio id="system-audio" src="./音频.MP3" preload="auto"></audio>
+    <div id="final-panic-glow" aria-hidden="true"></div>
+
+    <section id="countdown-hud" aria-label="危机倒计时" aria-live="polite">
+        <div class="countdown-frame">
+            <div class="countdown-meta">
+                <span>CRITICAL TIMER</span>
+                <span id="countdown-status">AUDIO SYNC</span>
+            </div>
+            <div id="countdown-time">--:--</div>
+        </div>
+    </section>
+
+    <div id="ui-wrapper">
+        <button id="btn-toggle">隐藏控制</button>
+        <div id="control-panel">
+            <button id="btn-mouse" class="mode-btn active">鼠标控制</button>
+            <button id="btn-gesture" class="mode-btn">体感控制</button>
+        </div>
+    </div>
+
+    <div id="glitch-overlay" aria-hidden="true">
+        <div id="corrupt-stream"></div>
+        <div id="error-stack"></div>
+        <div id="error-popups"></div>
+    </div>
+
+    <div id="ending-screen" aria-hidden="true">
+        <div id="ending-modal" aria-live="polite">
+            <p id="ending-modal-line"></p>
+        </div>
+    </div>
+
+    <canvas id="countdown-warning-canvas" aria-hidden="true"></canvas>
+    <canvas id="portal-canvas" aria-hidden="true"></canvas>
+    <canvas id="glcanvas"></canvas>
+
+    <script src="./js/space.js"></script>
+</body>
+</html>
+

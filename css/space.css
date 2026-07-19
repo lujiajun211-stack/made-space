@@ -1,0 +1,651 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=ZCOOL+QingKe+HuangYou&display=swap');
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+            cursor: grab; 
+        }
+        body:active {
+            cursor: grabbing;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            image-rendering: auto;
+        }
+
+        #glcanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+        }
+
+        #portal-canvas {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            z-index: 62;
+            width: clamp(260px, 34vw, 520px);
+            height: clamp(260px, 34vw, 520px);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            mix-blend-mode: screen;
+            filter: brightness(1.78) saturate(1.28) contrast(1.62) drop-shadow(0 0 30px rgba(110, 0, 12, 0.76));
+        }
+
+        #countdown-warning-canvas {
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            z-index: 95;
+            width: clamp(220px, 24vw, 360px);
+            height: clamp(220px, 24vw, 360px);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            opacity: var(--countdown-warning, 0);
+            filter: drop-shadow(0 0 18px rgba(143, 6, 22, 0.62));
+            transition: opacity 0.12s linear;
+        }
+
+
+        #final-panic-glow {
+            position: fixed;
+            inset: 0;
+            z-index: 70;
+            pointer-events: none;
+            opacity: calc(var(--final-panic, 0) * 0.82);
+            background:
+                radial-gradient(circle at center, rgba(255, 12, 24, 0.34), rgba(255, 0, 36, 0.12) 28%, transparent 58%),
+                radial-gradient(circle at 50% 78%, rgba(255, 52, 22, 0.22), transparent 46%),
+                linear-gradient(180deg, rgba(255, 0, 28, 0.10), transparent 42%, rgba(255, 0, 18, 0.18));
+            mix-blend-mode: screen;
+            transition: opacity 0.18s linear;
+        }
+
+        /* 搴曢儴 UI 瀹瑰櫒 */
+        #ui-wrapper {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        /* 灞曞紑/鏀惰捣 鍒囨崲鎸夐挳 */
+        #btn-toggle {
+            background: rgba(20, 20, 20, 0.5);
+            color: #aaa;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            transition: all 0.3s ease;
+            outline: none;
+            letter-spacing: 1px;
+        }
+        #btn-toggle:hover {
+            color: #fff;
+            background: rgba(40, 40, 40, 0.8);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 鎺у埗闈㈡澘鏈綋 */
+        #control-panel {
+            background: rgba(20, 20, 20, 0.6);
+            padding: 6px;
+            border-radius: 30px;
+            display: flex;
+            gap: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+            max-height: 50px; 
+            opacity: 1;
+        }
+
+        /* 鏀惰捣鐘舵€佺殑鏍峰紡 */
+        #control-panel.collapsed {
+            max-height: 0;
+            opacity: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            border-width: 0;
+            margin: 0;
+        }
+
+        /* 鎺у埗鎸夐挳 */
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 10px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            outline: none;
+            letter-spacing: 1px;
+        }
+        .mode-btn:hover {
+            color: #ccc;
+        }
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        #countdown-hud {
+            position: fixed;
+            top: clamp(72px, 10vh, 126px);
+            left: 50%;
+            z-index: 120;
+            width: auto;
+            min-width: 340px;
+            transform: translateX(-50%) translateY(-10px);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.28s ease, visibility 0.28s ease, transform 0.28s ease;
+            font-family: 'Share Tech Mono', 'ZCOOL QingKe HuangYou', 'PingFang SC', 'Microsoft YaHei', monospace;
+        }
+
+        #countdown-hud.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #countdown-hud.is-critical {
+            opacity: 1;
+        }
+
+        .countdown-frame {
+            position: relative;
+            padding: 16px 34px 17px;
+            overflow: hidden;
+            color: rgba(255, 232, 224, 0.96);
+            border: 1px solid rgba(255, 52, 60, 0.46);
+            background: rgba(34, 0, 9, 0.34);
+            box-shadow:
+                0 0 18px rgba(255, 20, 42, 0.26),
+                0 14px 48px rgba(0, 0, 0, 0.36);
+        }
+
+        .countdown-frame::before,
+        .countdown-frame::after {
+            display: none;
+        }
+
+        .countdown-frame::before {
+            inset: 0;
+            background:
+                linear-gradient(90deg, transparent, rgba(255, 220, 220, 0.12), transparent),
+                repeating-linear-gradient(0deg, rgba(255, 190, 190, 0.045) 0 1px, transparent 1px 5px);
+            mix-blend-mode: screen;
+            opacity: 0.24;
+            transform: none;
+        }
+
+        .countdown-frame::after {
+            inset: 8px 10px;
+            border-top: 1px solid rgba(255, 168, 160, 0.45);
+            border-bottom: 1px solid rgba(255, 45, 60, 0.30);
+            opacity: 0.50;
+        }
+
+        .countdown-meta,
+        .countdown-footer {
+            display: none;
+        }
+
+        #countdown-time {
+            position: relative;
+            z-index: 1;
+            margin: 0;
+            font-size: clamp(60px, 9.2vw, 92px);
+            line-height: 0.98;
+            letter-spacing: 0;
+            text-align: center;
+            color: #8f0616;
+            text-shadow:
+                0 2px 0 rgba(36, 0, 8, 0.88),
+                -1px 0 0 rgba(255, 20, 54, 0.56),
+                1px 0 0 rgba(52, 0, 10, 0.82),
+                0 0 14px rgba(255, 24, 42, 0.58),
+                0 0 30px rgba(255, 0, 64, 0.26);
+            font-variant-numeric: tabular-nums;
+        }
+
+        #countdown-time::before,
+        #countdown-time::after {
+            display: none;
+        }
+
+        .countdown-progress {
+            display: none;
+        }
+
+        #countdown-fill {
+            width: 100%;
+            height: 100%;
+            transform-origin: left center;
+            transform: scaleX(1);
+            background:
+                linear-gradient(90deg, #ff1838, #ff6b5a 62%, #ffd2bd),
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.18) 0 7px, transparent 7px 14px);
+            box-shadow: 0 0 12px rgba(255, 30, 52, 0.64);
+        }
+
+        #countdown-hud.is-critical .countdown-frame {
+            border-color: rgba(255, 126, 112, 0.62);
+            box-shadow:
+                0 0 24px rgba(255, 22, 42, 0.50),
+                0 16px 54px rgba(0, 0, 0, 0.46);
+        }
+
+        #countdown-hud.is-critical #countdown-time {
+            filter: none;
+        }
+
+        @media (max-width: 560px) {
+            #countdown-hud {
+                top: 48px;
+                min-width: min(320px, calc(100vw - 32px));
+            }
+
+            .countdown-frame {
+                padding: 14px 22px;
+            }
+
+            .countdown-meta,
+            .countdown-footer {
+                font-size: 10px;
+                gap: 10px;
+            }
+        }
+
+
+        /* 寮€濮嬩换鍔＄‘璁?UI锛氳皟鐢?bg1.png 浣滀负搴曞浘锛屾殫閾惰崸鍏夌豢绯荤粺寮圭獥 */
+        #start-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0.74)),
+                radial-gradient(circle at center, rgba(0, 255, 120, 0.18), rgba(0, 0, 0, 0.12) 34%, rgba(0, 0, 0, 0.78) 100%),
+                url('../bg1.jpg') center center / cover no-repeat;
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            transition: opacity 0.55s ease, visibility 0.55s ease;
+        }
+
+        #start-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 120, 0.035) 0px,
+                    rgba(0, 255, 120, 0.035) 1px,
+                    transparent 1px,
+                    transparent 5px
+                ),
+                linear-gradient(90deg, transparent, rgba(0, 255, 120, 0.08), transparent);
+            mix-blend-mode: screen;
+            opacity: 0.55;
+            animation: overlayScan 6s linear infinite;
+        }
+
+        @keyframes overlayScan {
+            0% { transform: translateY(-14px); }
+            100% { transform: translateY(14px); }
+        }
+
+        #start-overlay.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        #start-modal {
+            position: relative;
+            width: min(470px, calc(100vw - 48px));
+            padding: 30px 34px 28px;
+            border: 1px solid rgba(118, 255, 169, 0.56);
+            border-radius: 0;
+            background:
+                linear-gradient(145deg, rgba(10, 14, 14, 0.76), rgba(38, 43, 42, 0.48)),
+                linear-gradient(90deg, rgba(0, 255, 120, 0.08), transparent 30%, transparent 70%, rgba(0, 255, 120, 0.08));
+            box-shadow:
+                0 0 18px rgba(0, 255, 120, 0.22),
+                inset 0 0 30px rgba(0, 255, 120, 0.06),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.045),
+                0 22px 80px rgba(0, 0, 0, 0.74);
+            color: #c9ffd9;
+            font-family: 'ZCOOL QingKe HuangYou', 'Share Tech Mono', 'PingFang SC', 'Microsoft YaHei', monospace;
+            font-weight: 300;
+            text-align: center;
+            overflow: hidden;
+            letter-spacing: 1px;
+            clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+        }
+
+        #start-modal::before,
+        #start-modal::after {
+            content: "";
+            position: absolute;
+            left: 20px;
+            right: 20px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(95, 255, 154, 0.9), transparent);
+            opacity: 0.70;
+        }
+
+        #start-modal::before {
+            top: 13px;
+        }
+
+        #start-modal::after {
+            bottom: 13px;
+        }
+
+        #start-modal-title {
+            margin: 0 0 24px;
+            font-size: clamp(17px, 2.45vw, 22px);
+            font-weight: 300;
+            letter-spacing: 2.5px;
+            line-height: 1.85;
+            text-shadow:
+                0 0 7px rgba(0, 255, 120, 0.66),
+                0 0 18px rgba(0, 255, 120, 0.22);
+        }
+
+        #start-confirm-btn {
+            min-width: 132px;
+            padding: 10px 34px 9px;
+            border: 1px solid rgba(120, 255, 174, 0.72);
+            border-radius: 0;
+            background:
+                linear-gradient(180deg, rgba(7, 36, 24, 0.72), rgba(0, 10, 7, 0.86));
+            color: #b4ffc7;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 300;
+            letter-spacing: 5px;
+            font-family: 'ZCOOL QingKe HuangYou', 'Share Tech Mono', 'PingFang SC', 'Microsoft YaHei', monospace;
+            text-shadow: 0 0 9px rgba(0, 255, 120, 0.78);
+            box-shadow:
+                0 0 10px rgba(0, 255, 120, 0.30),
+                inset 0 0 14px rgba(0, 255, 120, 0.10);
+            transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+        }
+
+        #start-confirm-btn:hover {
+            transform: translateY(-1px);
+            color: #e6ffed;
+            background:
+                linear-gradient(180deg, rgba(0, 74, 34, 0.82), rgba(0, 18, 10, 0.92));
+            box-shadow:
+                0 0 20px rgba(0, 255, 120, 0.48),
+                inset 0 0 22px rgba(0, 255, 120, 0.16);
+        }
+
+        #start-confirm-btn:active {
+            transform: translateY(1px);
+        }
+
+        body.chaos-active {
+            animation: none;
+        }
+
+        #glitch-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 80;
+            pointer-events: none;
+            overflow: hidden;
+            opacity: 1;
+            display: none;
+        }
+
+        #glitch-overlay::before,
+        #glitch-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            opacity: 0.12;
+        }
+
+        #glitch-overlay::before {
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(255, 255, 255, 0.025) 0px,
+                    rgba(255, 255, 255, 0.025) 1px,
+                    transparent 1px,
+                    transparent 8px
+                );
+            animation: scanlineChaos 0.44s linear infinite;
+        }
+
+        #glitch-overlay::after {
+            background:
+                linear-gradient(90deg, rgba(255, 0, 50, 0.018), transparent 22%, rgba(0, 255, 190, 0.014) 76%, transparent),
+                repeating-linear-gradient(90deg, transparent 0 96px, rgba(0, 255, 120, 0.012) 96px 97px);
+            transform: translateX(0);
+            animation: chromaTear 1.4s steps(2, end) infinite;
+        }
+
+        @keyframes scanlineChaos {
+            from { transform: translateY(-14px); }
+            to { transform: translateY(14px); }
+        }
+
+        @keyframes chromaTear {
+            0% { clip-path: inset(4% 0 91% 0); transform: translateX(-16px); }
+            25% { clip-path: inset(26% 0 62% 0); transform: translateX(24px); }
+            50% { clip-path: inset(55% 0 31% 0); transform: translateX(-34px); }
+            75% { clip-path: inset(77% 0 10% 0); transform: translateX(20px); }
+            100% { clip-path: inset(12% 0 78% 0); transform: translateX(-10px); }
+        }
+
+        #corrupt-stream,
+        #error-stack,
+        #error-popups {
+            position: absolute;
+            font-family: 'Share Tech Mono', 'ZCOOL QingKe HuangYou', monospace;
+            color: rgba(235, 238, 232, 0.94);
+            text-shadow:
+                -1px 0 rgba(255, 255, 255, 0.16),
+                1px 0 rgba(0, 0, 0, 0.45),
+                0 0 12px rgba(255, 255, 255, 0.18);
+            white-space: pre-wrap;
+            word-break: break-all;
+            filter: contrast(1.18);
+        }
+
+        #corrupt-stream {
+            display: none;
+        }
+
+        #error-stack {
+            left: clamp(12px, 3vw, 42px);
+            right: clamp(12px, 3vw, 42px);
+            bottom: clamp(54px, 8vh, 96px);
+            max-height: min(38vh, 330px);
+            overflow: hidden;
+            padding: 0 14px;
+            border-left: 2px solid rgba(238, 238, 232, 0.50);
+            background: transparent;
+            font-family: "Share Tech Mono", Consolas, monospace;
+            font-size: clamp(11px, 1.05vw, 15px);
+            line-height: 1.55;
+            color: rgba(238, 238, 232, 0.95);
+            opacity: 1;
+            text-shadow: 0 0 7px rgba(255, 255, 255, 0.15), 1px 1px 0 rgba(0, 0, 0, 0.74);
+        }
+
+        #error-popups {
+            inset: 0;
+            color: rgba(238, 238, 232, 0.95);
+            opacity: 1;
+        }
+
+        .log-panel {
+            position: absolute;
+            width: var(--log-panel-width, min(520px, 38vw));
+            max-width: min(520px, 38vw);
+            color: rgba(238, 238, 232, 0.92);
+            font-family: "Share Tech Mono", Consolas, monospace;
+            font-size: clamp(10px, 0.9vw, 13px);
+            line-height: 1.34;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: normal;
+            opacity: 1;
+            text-shadow: 0 0 7px rgba(255, 255, 255, 0.12), 1px 1px 0 rgba(0, 0, 0, 0.76);
+        }
+
+        .log-panel.is-boxed {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .log-panel.is-red {
+            color: rgba(255, 78, 72, 0.88);
+            text-shadow:
+                0 0 8px rgba(255, 42, 35, 0.24),
+                1px 1px 0 rgba(0, 0, 0, 0.80);
+        }
+
+        .log-panel.is-wide {
+            max-width: min(620px, 42vw);
+        }
+
+        #ending-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            pointer-events: none;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0 26px clamp(74px, 13vh, 132px);
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            background: #000 url('../bg2.jpg') center center / cover no-repeat;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+        }
+
+        #ending-screen::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                repeating-linear-gradient(
+                    0deg,
+                    rgba(0, 255, 120, 0.030) 0px,
+                    rgba(0, 255, 120, 0.030) 1px,
+                    transparent 1px,
+                    transparent 6px
+                ),
+                radial-gradient(circle at center, rgba(0, 255, 120, 0.14), rgba(0, 0, 0, 0.10) 38%, rgba(0, 0, 0, 0.56) 100%);
+            opacity: 0.62;
+            animation: overlayScan 6s linear infinite;
+        }
+
+        #ending-screen.is-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #ending-modal {
+            position: relative;
+            width: min(760px, calc(100vw - 52px));
+            min-height: 118px;
+            padding: 26px 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(118, 255, 169, 0.58);
+            background:
+                linear-gradient(145deg, rgba(7, 16, 13, 0.78), rgba(34, 43, 39, 0.48)),
+                linear-gradient(90deg, rgba(0, 255, 120, 0.08), transparent 28%, transparent 72%, rgba(0, 255, 120, 0.08));
+            box-shadow:
+                0 0 18px rgba(0, 255, 120, 0.24),
+                inset 0 0 32px rgba(0, 255, 120, 0.08),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.045),
+                0 22px 90px rgba(0, 0, 0, 0.78);
+            color: #c9ffd9;
+            font-family: 'ZCOOL QingKe HuangYou', 'Share Tech Mono', 'PingFang SC', 'Microsoft YaHei', monospace;
+            text-align: center;
+            overflow: hidden;
+            letter-spacing: 2px;
+            clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+            opacity: 0;
+            transform: translateY(10px) scale(0.985);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+        }
+
+        #ending-modal::before,
+        #ending-modal::after {
+            content: "";
+            position: absolute;
+            left: 22px;
+            right: 22px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(95, 255, 154, 0.9), transparent);
+            opacity: 0.72;
+        }
+
+        #ending-modal::before {
+            top: 13px;
+        }
+
+        #ending-modal::after {
+            bottom: 13px;
+        }
+
+        #ending-modal.is-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        #ending-modal-line {
+            margin: 0;
+            min-height: 2.2em;
+            color: #c9ffd9;
+            font-size: clamp(18px, 2.25vw, 26px);
+            font-weight: 300;
+            line-height: 1.75;
+            text-shadow:
+                0 0 8px rgba(0, 255, 120, 0.72),
+                0 0 22px rgba(0, 255, 120, 0.28);
+            opacity: 1;
+            transition: opacity 0.26s ease;
+        }
+
+        #ending-modal-line.is-fading {
+            opacity: 0;
+        }
